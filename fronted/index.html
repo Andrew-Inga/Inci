@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inci - Registro de Incidencias</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #004494; }
+        .status { color: #555; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <h1>Portal Inci 🛣️</h1>
+    <p>Reporta baches, fallos de alumbrado o basura para notificar a las autoridades correspondientes.</p>
+
+    <div class="card">
+        <h3>Registrar Nueva Incidencia</h3>
+        <form id="incidenciaForm">
+            <div class="form-group">
+                <label for="titulo">Título / Resumen (Máx 255 caracteres):</label>
+                <input type="text" id="titulo" maxlength="255" required placeholder="Ej: Bache profundo en Av. Principal">
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción detallada (Máx 2000 caracteres):</label>
+                <textarea id="descripcion" rows="4" maxlength="2000" required placeholder="Describe el problema y la ubicación exacta..."></textarea>
+            </div>
+            <button type="submit">Enviar Reporte</button>
+        </form>
+        <p id="mensajeRespuesta" style="color: #28a745; font-weight: bold; margin-top: 10px;"></p>
+    </div>
+
+    <h2>Incidencias Registradas</h2>
+    <div id="listaIncidencias">
+        <p>Cargando reportes...</p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/incidencias';
+
+        // Petición GET para obtener datos
+        async function cargarIncidencias() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                const contenedor = document.getElementById('listaIncidencias');
+                
+                if(data.length === 0) {
+                    contenedor.innerHTML = '<p>No tiene ningún registro aún.</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = '';
+                data.forEach(inc => {
+                    contenedor.innerHTML += `
+                        <div class="card">
+                            <h4 style="margin-top: 0; margin-bottom: 5px;">${inc.titulo}</h4>
+                            <span class="status"><strong>Estado:</strong> ${inc.estado} | <strong>Fecha:</strong> ${inc.fecha}</span>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error de conexión con el backend:", error);
+                document.getElementById('listaIncidencias').innerHTML = '<p style="color: red;">Error al cargar los datos. Asegúrate de que el servidor Flask esté corriendo.</p>';
+            }
+        }
+
+        // Petición POST al enviar el formulario
+        document.getElementById('incidenciaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                titulo: document.getElementById('titulo').value,
+                descripcion: document.getElementById('descripcion').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if(response.status === 201) {
+                    const resultado = await response.json();
+                    document.getElementById('mensajeRespuesta').innerText = resultado.mensaje;
+                    document.getElementById('incidenciaForm').reset();
+                    cargarIncidencias(); 
+                    
+                    // Limpiar el mensaje de éxito después de 3 segundos
+                    setTimeout(() => {
+                        document.getElementById('mensajeRespuesta').innerText = '';
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error("Error al registrar:", error);
+            }
+        });
+
+    
+        cargarIncidencias();
+    </script>
+</body>
+</html>
