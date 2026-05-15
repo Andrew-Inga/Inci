@@ -10,6 +10,7 @@ Casos de uso especificos a desarrollas en el timpo de hora y media
 ya que tuve un percanse con jira use github proyect que es un homologo bastante bueno.
 
 ![](../evidencias/casos%20de%20uso%20registrados.png)
+
 ![](../evidencias/Uso%20del%20github.png)
 
 
